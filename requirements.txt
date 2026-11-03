@@ -1,0 +1,1 @@
+# MYRA core uses only Python standard library. Termux:API commands are provided by the termux-api package.
