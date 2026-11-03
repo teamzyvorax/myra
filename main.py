@@ -47,7 +47,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
+        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, play love song for a random romantic YouTube search, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -100,7 +100,7 @@ TEXT = {
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps/speech, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, लव सॉन्ग चलाओ for random romantic YouTube song, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps/speech, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
