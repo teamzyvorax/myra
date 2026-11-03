@@ -34,6 +34,7 @@ SETTINGS_ACTIONS = {
     "sound": "android.settings.SOUND_SETTINGS",
     "apps": "android.settings.APPLICATION_SETTINGS",
     "security": "android.settings.SECURITY_SETTINGS",
+    "speech": "android.settings.SPEECH_SETTINGS",
 }
 AUDIO_EXTENSIONS = {".mp3", ".m4a", ".wav", ".ogg", ".flac", ".opus", ".aac"}
 OPS = {
@@ -46,7 +47,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
+        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -98,7 +99,7 @@ TEXT = {
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps/speech, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
@@ -494,7 +495,7 @@ def handle(phrase):
         say("notification_done") if send_notification(message) else say("action_error")
     elif phrase.startswith(("open settings ", "settings ", "सेटिंग खोलो ")):
         setting = re.sub(r"^(open settings|settings|सेटिंग खोलो)\s+", "", phrase).strip()
-        setting = {"वाईफाई":"wifi", "वाइफाई":"wifi", "ब्लूटूथ":"bluetooth", "डिस्प्ले":"display", "साउंड":"sound", "ऐप":"apps", "सिक्योरिटी":"security"}.get(setting, setting)
+        setting = {"वाईफाई":"wifi", "वाइफाई":"wifi", "ब्लूटूथ":"bluetooth", "डिस्प्ले":"display", "साउंड":"sound", "ऐप":"apps", "सिक्योरिटी":"security", "वॉइस":"speech", "स्पीच":"speech"}.get(setting, setting)
         say("settings_open", setting=setting) if open_settings_page(setting) else say("settings_error")
     elif phrase in ("stopwatch start", "start stopwatch", "स्टॉपवॉच शुरू", "स्टॉपवॉच स्टार्ट"):
         global STOPWATCH_START
