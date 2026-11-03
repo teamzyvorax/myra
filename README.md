@@ -20,7 +20,9 @@ A free, Termux-first Android voice assistant using Android speech recognition, A
 - Open YouTube and Google in the phone browser
 - Save notes and list the latest 20 notes
 - Basic safe calculator (arithmetic only; no Python code execution)
-- Countdown timers with spoken completion alert while MYRA remains running
+- Countdown timers and custom spoken reminders while MYRA remains running
+- Stopwatch with start/stop commands
+- Random number generator with a user-defined range
 - Typed-input fallback and system diagnostics
 - No arbitrary shell-command execution
 
@@ -77,12 +79,16 @@ python main.py
 | show notes / नोट्स दिखाओ | List saved notes |
 | calculate 12 * 8 | Calculate arithmetic |
 | timer 5 | Start a 5-minute countdown |
+| remind 5 drink water | Speak a reminder after 5 minutes |
+| random 1 100 | Generate a random number from 1 to 100 |
+| stopwatch start / stopwatch stop | Measure elapsed time |
 | exit | Quit MYRA |
 
 ## Important notes
 - Male/female are pitch/rate presets, not guaranteed gender-specific voices. Actual voice depends on Android's installed TTS voices.
 - Speech recognition may need internet depending on the Android recognizer selected on the phone.
-- Countdown timers alert only while MYRA's Python process is running; they are not Android system alarms.
+- Timers and reminders alert only while MYRA's Python process is running; they are not Android system alarms and will not survive closing MYRA or rebooting the phone.
+- The stopwatch runs only while MYRA is open; it is not a background service.
 - Notes are stored locally in `notes.json` in the project folder.
 - Install the Termux:API Android companion app and grant microphone, camera/torch, vibration, contacts, phone and SMS permissions only if you use those features.
 - Calls and SMS are never initiated until you explicitly say/type `confirm`; `cancel` discards the pending action.
