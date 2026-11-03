@@ -248,7 +248,7 @@ def handle(phrase):
         result = run_api("termux-vibrate", "-d", "300")
         say("vibrate" if result and result.returncode == 0 else "vibrate_error")
     elif phrase.startswith(("search ", "सर्च ")):
-        query = re.sub(r"^(search|सर्च)\\s+", "", phrase).strip()
+        query = re.sub(r"^(search|सर्च)\s+", "", phrase).strip()
         if query:
             result = run_api("termux-open-url", "https://www.google.com/search?q=" + quote(query))
             say("search", query=query) if result and result.returncode == 0 else say("unknown")
