@@ -22,6 +22,8 @@ PRESETS = {
     "female": {"pitch": "1.12", "rate": "1.00"},
 }
 TIMERS = []
+PENDING_ACTION = None
+APP_PACKAGES = {"whatsapp":"com.whatsapp","chrome":"com.android.chrome","youtube":"com.google.android.youtube","settings":"com.android.settings","maps":"com.google.android.apps.maps","gmail":"com.google.android.gm"}
 OPS = {
     ast.Add: operator.add, ast.Sub: operator.sub,
     ast.Mult: operator.mul, ast.Div: operator.truediv,
@@ -55,6 +57,14 @@ TEXT = {
         "torch_error": "Flashlight control is unavailable. Check Termux API.",
         "vibrate": "Vibrating the phone.", "vibrate_error": "Vibration is unavailable.",
         "search": "Searching the web for {query}.",
+        "contacts_error": "Could not read contacts. Check Termux:API permissions.",
+        "contacts_none": "No matching contacts found.", "contacts_title": "Matching contacts:",
+        "call_confirm": "Call {number}? Say confirm to place the call, or cancel.",
+        "sms_confirm": "Send this message to {number}: {message}. Say confirm to send, or cancel.",
+        "action_cancelled": "Action cancelled.", "action_done": "Action completed.",
+        "action_error": "Action failed. Check permissions and Termux:API.",
+        "app_open": "Opening {app}.", "app_unknown": "That app is not in MYRA safe launch list.",
+        "call_usage": "Say call followed by a phone number.", "sms_usage": "Say sms, number, then message.",
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
@@ -81,6 +91,14 @@ TEXT = {
         "torch_error": "टॉर्च कंट्रोल उपलब्ध नहीं है। Termux API चेक करें।",
         "vibrate": "फोन वाइब्रेट हो रहा है।", "vibrate_error": "वाइब्रेशन उपलब्ध नहीं है।",
         "search": "{query} के लिए इंटरनेट पर खोज रही हूँ।",
+        "contacts_error": "कॉन्टैक्ट नहीं पढ़ पाए। Termux API परमिशन चेक करें।",
+        "contacts_none": "इस नाम का कॉन्टैक्ट नहीं मिला।", "contacts_title": "मिले हुए कॉन्टैक्ट:",
+        "call_confirm": "{number} पर कॉल करना है? कन्फर्म बोलें या कैंसल।",
+        "sms_confirm": "{number} पर यह मैसेज भेजना है: {message}। कन्फर्म बोलें या कैंसल।",
+        "action_cancelled": "एक्शन कैंसल कर दिया।", "action_done": "एक्शन पूरा हुआ।",
+        "action_error": "एक्शन नहीं हुआ। परमिशन और Termux API चेक करें।",
+        "app_open": "{app} खोल रही हूँ।", "app_unknown": "यह ऐप सुरक्षित लिस्ट में नहीं है।",
+        "call_usage": "कॉल बोलकर फोन नंबर बताइए।", "sms_usage": "एसएमएस बोलकर नंबर और मैसेज बताइए।",
     },
 }
 
@@ -203,8 +221,59 @@ def start_timer(minutes, reminder=None):
     TIMERS.append(timer)
     say("timer_set", minutes=minutes)
 
+
+def list_contacts(query=""):
+    result = run_api("termux-contact-list")
+    if not result or result.returncode != 0:
+        say("contacts_error")
+        return
+    try:
+        contacts = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        say("contacts_error")
+        return
+    found = []
+    for contact in contacts:
+        name = str(contact.get("name", ""))
+        if query in name.lower():
+            for item in contact.get("number", []):
+                number = item.get("number", "") if isinstance(item, dict) else str(item)
+                if number:
+                    found.append((name, number))
+    if not found:
+        say("contacts_none")
+    else:
+        say("contacts_title")
+        for name, number in found[:10]:
+            print(f"{name}: {number}")
+
+def launch_app(app):
+    package = APP_PACKAGES.get(app)
+    if not package:
+        say("app_unknown")
+        return
+    result = run_api("monkey", "-p", package, "-c", "android.intent.category.LAUNCHER", "1")
+    say("app_open", app=app) if result and result.returncode == 0 else say("action_error")
+
 def handle(phrase):
+    global PENDING_ACTION
     phrase = phrase.strip().lower()
+    if PENDING_ACTION:
+        if phrase in ("confirm", "yes", "हाँ", "हां", "कन्फर्म", "पक्का"):
+            action = PENDING_ACTION
+            PENDING_ACTION = None
+            if action["type"] == "call":
+                result = run_api("termux-telephony-call", action["number"])
+            else:
+                result = run_api("termux-sms-send", "-n", action["number"], action["message"])
+            say("action_done" if result and result.returncode == 0 else "action_error")
+            return True
+        if phrase in ("cancel", "no", "नहीं", "कैंसल", "रद्द"):
+            PENDING_ACTION = None
+            say("action_cancelled")
+            return True
+        PENDING_ACTION = None
+        say("action_cancelled")
     if not phrase:
         say("empty")
     elif phrase in ("exit", "quit", "stop", "बंद", "बंद करो", "एग्जिट"):
@@ -224,6 +293,28 @@ def handle(phrase):
         set_language("en")
     elif phrase in ("language", "भाषा"):
         set_language("hi" if settings["language"] == "en" else "en")
+    elif phrase in ("contacts", "show contacts", "कॉन्टैक्ट्स दिखाओ"):
+        list_contacts()
+    elif phrase.startswith(("find contact ", "contact ", "कॉन्टैक्ट खोजो ")):
+        query = re.sub(r"^(find contact|contact|कॉन्टैक्ट खोजो)\s+", "", phrase).strip()
+        list_contacts(query)
+    elif phrase.startswith(("call ", "कॉल ")):
+        number = re.sub(r"^(call|कॉल)\s+", "", phrase).strip()
+        if re.fullmatch(r"[+0-9][0-9 -]{5,18}", number):
+            PENDING_ACTION = {"type":"call","number":re.sub(r"[^+0-9]","",number)}
+            say("call_confirm", number=PENDING_ACTION["number"])
+        else:
+            say("call_usage")
+    elif phrase.startswith(("sms ", "message ", "एसएमएस ")):
+        parts = phrase.split(maxsplit=2)
+        if len(parts) == 3 and re.fullmatch(r"[+0-9][0-9 -]{5,18}", parts[1]):
+            PENDING_ACTION = {"type":"sms","number":re.sub(r"[^+0-9]","",parts[1]),"message":parts[2]}
+            say("sms_confirm", number=PENDING_ACTION["number"], message=parts[2])
+        else:
+            say("sms_usage")
+    elif phrase.startswith(("open app ", "launch ", "ऐप खोलो ")):
+        app = re.sub(r"^(open app|launch|ऐप खोलो)\s+", "", phrase).strip()
+        launch_app(app)
     elif phrase.startswith(("note ", "नोट ")):
         note = phrase.split(" ", 1)[1].strip()
         if note:
@@ -288,7 +379,8 @@ def diagnostics():
     print("\nMYRA SYSTEM CHECK")
     for command in ("termux-speech-to-text", "termux-tts-speak",
                     "termux-battery-status", "termux-open-url",
-                    "termux-torch", "termux-vibrate"):
+                    "termux-torch", "termux-vibrate", "termux-contact-list",
+                    "termux-telephony-call", "termux-sms-send", "monkey"):
         print(f"{command}: {'FOUND' if shutil.which(command) else 'MISSING'}")
     print(f"Voice preset: {settings['voice']}")
     print(f"Language: {settings['language']}")
