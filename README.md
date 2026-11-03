@@ -13,6 +13,9 @@ A free, Termux-first Android voice assistant using Android speech recognition, A
 - Google web search by voice or typed command
 - Safe app launcher for WhatsApp, Chrome, YouTube, Settings, Maps and Gmail
 - Contact lookup by name (requires contacts permission)
+- Wi-Fi connection details (SSID/IP when Android exposes them)
+- Bluetooth status details
+- Detailed battery status (health, temperature and charging fields when available)
 - Phone calls and SMS only after a spoken/typed confirmation
 - Open YouTube and Google in the phone browser
 - Save notes and list the latest 20 notes
@@ -59,6 +62,9 @@ python main.py
 | find contact sam | Find a contact by name |
 | call 9876543210 | Ask confirmation before calling |
 | sms 9876543210 hello | Ask confirmation before sending SMS |
+| wifi / wifi status | Show available Wi-Fi connection details |
+| bluetooth / bluetooth status | Show Bluetooth status details |
+| battery details | Show detailed battery status |
 | confirm / हाँ | Confirm a pending call or SMS |
 | cancel / नहीं | Cancel a pending call or SMS |
 | youtube / यूट्यूब | Open YouTube |
