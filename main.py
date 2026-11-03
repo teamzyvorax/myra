@@ -371,6 +371,13 @@ def open_settings_page(setting):
     result = run_api("am", "start", "-a", action)
     return bool(result and result.returncode == 0)
 
+def play_random_love_song():
+    choices = ["Hindi romantic love songs", "Arijit Singh romantic songs", "90s Hindi romantic songs", "new Hindi love songs", "soft romantic Bollywood songs", "Hindi unplugged love songs"]
+    query = random.choice(choices)
+    url = "https://www.youtube.com/results?search_query=" + quote(query)
+    result = run_api("termux-open-url", url)
+    return bool(result and result.returncode == 0)
+
 def send_notification(message):
     message = message.strip()[:500]
     if not message:
@@ -478,6 +485,8 @@ def handle(phrase):
             say("brightness_set", level=level) if result and result.returncode == 0 else say("action_error")
         except ValueError:
             say("brightness_usage")
+    elif phrase in ("play some song love", "play love song", "play a love song", "play romantic song", "play some romantic music", "love song", "कोई लव सॉन्ग चलाओ", "लव सॉन्ग चलाओ", "रोमांटिक गाना चलाओ", "कोई रोमांटिक गाना चलाओ", "प्यार वाला गाना चलाओ", "लव वाला गाना चलाओ"):
+        say("love_song") if play_random_love_song() else say("action_error")
     elif phrase in ("pause music", "music pause", "म्यूजिक पॉज", "गाना रोक दो"):
         result = run_api("termux-media-player", "pause")
         say("media_done" if result and result.returncode == 0 else "media_error")
