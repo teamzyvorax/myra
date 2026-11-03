@@ -81,7 +81,7 @@ python main.py
 | notify Meeting starts in 5 minutes | Post an Android notification |
 | open settings wifi | Open Android Wi-Fi settings |
 | open settings bluetooth | Open Android Bluetooth settings |
-| open settings display / sound / apps / security | Open the matching Android settings page |
+| open settings display / sound / apps / security / speech | Open the matching Android settings page |
 | confirm / हाँ | Confirm a pending call or SMS |
 | cancel / नहीं | Cancel a pending call or SMS |
 | youtube / यूट्यूब | Open YouTube |
@@ -101,7 +101,7 @@ python main.py
 
 ## Important notes
 - Male/female are pitch/rate presets, not guaranteed gender-specific voices. Actual voice depends on Android's installed TTS voices.
-- Speech recognition may need internet depending on the Android recognizer selected on the phone.
+- Speech recognition may need internet depending on the Android recognizer selected on the phone. For Hindi recognition, set Hindi as the preferred language in Android's speech/voice input settings (MYRA can open this with `open settings speech`). Hindi spoken replies are selected with `hindi`.
 - Timers and reminders alert only while MYRA's Python process is running; they are not Android system alarms and will not survive closing MYRA or rebooting the phone.
 - The stopwatch runs only while MYRA is open; it is not a background service.
 - Notes are stored locally in `notes.json` in the project folder.
