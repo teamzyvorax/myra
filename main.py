@@ -27,6 +27,15 @@ TIMERS = []
 PENDING_ACTION = None
 STOPWATCH_START = None
 APP_PACKAGES = {"whatsapp":"com.whatsapp","chrome":"com.android.chrome","youtube":"com.google.android.youtube","settings":"com.android.settings","maps":"com.google.android.apps.maps","gmail":"com.google.android.gm"}
+SETTINGS_ACTIONS = {
+    "wifi": "android.settings.WIFI_SETTINGS",
+    "bluetooth": "android.settings.BLUETOOTH_SETTINGS",
+    "display": "android.settings.DISPLAY_SETTINGS",
+    "sound": "android.settings.SOUND_SETTINGS",
+    "apps": "android.settings.APPLICATION_SETTINGS",
+    "security": "android.settings.SECURITY_SETTINGS",
+}
+AUDIO_EXTENSIONS = {".mp3", ".m4a", ".wav", ".ogg", ".flac", ".opus", ".aac"}
 OPS = {
     ast.Add: operator.add, ast.Sub: operator.sub,
     ast.Mult: operator.mul, ast.Div: operator.truediv,
@@ -37,7 +46,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, show notes, timer 5, remind 5 drink water, random 1 100, stopwatch start/stop, open app chrome, wifi, bluetooth, battery details, YouTube, browser, male/female, Hindi/English, help, exit.",
+        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -58,6 +67,17 @@ TEXT = {
         "random_result": "Your random number is {number}.",
         "stopwatch_started": "Stopwatch started.", "stopwatch_result": "Elapsed time: {seconds} seconds.",
         "stopwatch_idle": "Stopwatch is not running.",
+        "volume_set": "The {stream} volume is now {level}.",
+        "volume_usage": "Say volume music 8, or volume up or volume down.",
+        "brightness_set": "Screen brightness set to {level}.",
+        "brightness_usage": "Say brightness followed by a number from 0 to 255.",
+        "media_usage": "Say play music followed by a file name, pause music, resume music, or stop music.",
+        "media_started": "Starting music.",
+        "media_done": "Media command completed.",
+        "media_error": "Could not control music. Check the file and Termux:API.",
+        "notification_done": "Notification sent.",
+        "settings_open": "Opening {setting} settings.",
+        "settings_error": "Could not open that settings page.",
         "wifi_error": "Wi-Fi information is unavailable. Check Termux:API and permissions.",
         "bluetooth_error": "Bluetooth information is unavailable. Check Termux:API and permissions.",
         "battery_details": "Here are the battery details.",
@@ -78,7 +98,7 @@ TEXT = {
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, टॉर्च चालू/बंद, वाइब्रेट, सर्च शब्द, नोट लिखो, नोट्स दिखाओ, टाइमर 5, रिमाइंड 5 पानी पीना, रैंडम 1 100, स्टॉपवॉच स्टार्ट/स्टॉप, वाईफाई, ब्लूटूथ, यूट्यूब, ब्राउज़र, हेल्प, एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
@@ -99,6 +119,17 @@ TEXT = {
         "random_result": "आपका रैंडम नंबर है {number}।",
         "stopwatch_started": "स्टॉपवॉच शुरू हो गई।", "stopwatch_result": "बीता समय {seconds} सेकंड है।",
         "stopwatch_idle": "स्टॉपवॉच चालू नहीं है।",
+        "volume_set": "{stream} वॉल्यूम अब {level} है।",
+        "volume_usage": "वॉल्यूम म्यूजिक 8, वॉल्यूम बढ़ाओ या वॉल्यूम कम करो बोलें।",
+        "brightness_set": "स्क्रीन ब्राइटनेस {level} कर दी।",
+        "brightness_usage": "ब्राइटनेस के बाद 0 से 255 तक नंबर बोलें।",
+        "media_usage": "प्ले म्यूजिक के बाद फाइल का नाम, पॉज म्यूजिक, रिज्यूम म्यूजिक या स्टॉप म्यूजिक बोलें।",
+        "media_started": "म्यूजिक शुरू कर रही हूँ।",
+        "media_done": "मीडिया कमांड पूरा हुआ।",
+        "media_error": "म्यूजिक कंट्रोल नहीं हुआ। फाइल और Termux API चेक करें।",
+        "notification_done": "नोटिफिकेशन भेज दिया।",
+        "settings_open": "{setting} सेटिंग्स खोल रही हूँ।",
+        "settings_error": "यह सेटिंग्स पेज नहीं खुल पाया।",
         "wifi_error": "वाईफाई जानकारी उपलब्ध नहीं है। Termux API चेक करें।",
         "bluetooth_error": "ब्लूटूथ जानकारी उपलब्ध नहीं है। Termux API चेक करें।",
         "battery_details": "बैटरी की पूरी जानकारी यह है।",
@@ -275,6 +306,77 @@ def launch_app(app):
     result = run_api("monkey", "-p", package, "-c", "android.intent.category.LAUNCHER", "1")
     say("app_open", app=app) if result and result.returncode == 0 else say("action_error")
 
+def set_volume(stream, level):
+    allowed = {"music", "ring", "alarm", "notification", "system", "call"}
+    if stream not in allowed or not 0 <= level <= 100:
+        return False
+    result = run_api("termux-volume")
+    if not result or result.returncode != 0:
+        return False
+    try:
+        data = json.loads(result.stdout)
+        entries = data if isinstance(data, list) else data.get("streams", [])
+        item = next((x for x in entries if str(x.get("stream", "")).lower() == stream), None)
+        if item:
+            maximum = int(item.get("max_volume", 15))
+            actual = round(maximum * level / 100) if level <= 100 else level
+            actual = max(0, min(maximum, actual))
+        else:
+            actual = max(0, min(15, round(15 * level / 100)))
+        changed = run_api("termux-volume", stream, str(actual))
+        return bool(changed and changed.returncode == 0), actual
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return False, None
+
+def change_volume(direction):
+    result = run_api("termux-volume")
+    if not result or result.returncode != 0:
+        return False, None
+    try:
+        data = json.loads(result.stdout)
+        entries = data if isinstance(data, list) else data.get("streams", [])
+        item = next((x for x in entries if str(x.get("stream", "")).lower() == "music"), None)
+        if not item:
+            return False, None
+        maximum = int(item.get("max_volume", 15))
+        current = int(item.get("volume", 0))
+        target = max(0, min(maximum, current + direction * max(1, round(maximum * 0.08))))
+        changed = run_api("termux-volume", "music", str(target))
+        return bool(changed and changed.returncode == 0), target
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return False, None
+
+def play_music(filename):
+    candidate = Path(filename).expanduser()
+    music_dir = Path.home() / "storage" / "music"
+    if not candidate.is_absolute():
+        candidate = music_dir / candidate
+    try:
+        resolved = candidate.resolve(strict=True)
+        allowed_roots = [music_dir.resolve(), BASE_DIR.resolve()]
+        if not any(resolved == root or root in resolved.parents for root in allowed_roots):
+            return False
+        if not resolved.is_file() or resolved.suffix.lower() not in AUDIO_EXTENSIONS:
+            return False
+    except (OSError, RuntimeError):
+        return False
+    result = run_api("termux-media-player", "play", str(resolved))
+    return bool(result and result.returncode == 0)
+
+def open_settings_page(setting):
+    action = SETTINGS_ACTIONS.get(setting)
+    if not action:
+        return False
+    result = run_api("am", "start", "-a", action)
+    return bool(result and result.returncode == 0)
+
+def send_notification(message):
+    message = message.strip()[:500]
+    if not message:
+        return False
+    result = run_api("termux-notification", "--title", "MYRA", "--content", message, "--priority", "high")
+    return bool(result and result.returncode == 0)
+
 def handle(phrase):
     global PENDING_ACTION
     phrase = phrase.strip().lower()
@@ -349,6 +451,51 @@ def handle(phrase):
             start_timer(int(match.group(1)))
         else:
             say("timer_usage")
+    elif phrase in ("volume up", "increase volume", "आवाज बढ़ाओ", "वॉल्यूम बढ़ाओ", "आवाज तेज करो"):
+        ok, level = change_volume(1)
+        say("volume_set", stream="music", level=level) if ok else say("action_error")
+    elif phrase in ("volume down", "decrease volume", "आवाज कम करो", "वॉल्यूम कम करो"):
+        ok, level = change_volume(-1)
+        say("volume_set", stream="music", level=level) if ok else say("action_error")
+    elif phrase.startswith(("volume ", "वॉल्यूम ")):
+        parts = phrase.split()
+        try:
+            stream = parts[1] if len(parts) > 2 else "music"
+            level = int(parts[-1].replace("%", ""))
+            result = set_volume(stream, level)
+            ok, actual = result if isinstance(result, tuple) else (result, None)
+            say("volume_set", stream=stream, level=actual) if ok else say("volume_usage")
+        except (ValueError, IndexError):
+            say("volume_usage")
+    elif phrase.startswith(("brightness ", "ब्राइटनेस ")):
+        value = phrase.split()[-1]
+        try:
+            level = int(value)
+            if not 0 <= level <= 255:
+                raise ValueError
+            result = run_api("termux-brightness", str(level))
+            say("brightness_set", level=level) if result and result.returncode == 0 else say("action_error")
+        except ValueError:
+            say("brightness_usage")
+    elif phrase in ("pause music", "music pause", "म्यूजिक पॉज", "गाना रोक दो"):
+        result = run_api("termux-media-player", "pause")
+        say("media_done" if result and result.returncode == 0 else "media_error")
+    elif phrase in ("resume music", "music resume", "म्यूजिक चालू", "गाना चालू करो"):
+        result = run_api("termux-media-player", "play")
+        say("media_done" if result and result.returncode == 0 else "media_error")
+    elif phrase in ("stop music", "music stop", "म्यूजिक बंद", "गाना बंद करो"):
+        result = run_api("termux-media-player", "stop")
+        say("media_done" if result and result.returncode == 0 else "media_error")
+    elif phrase.startswith(("play music ", "play song ", "गाना चलाओ ")):
+        filename = re.sub(r"^(play music|play song|गाना चलाओ)\s+", "", phrase).strip()
+        say("media_started") if play_music(filename) else say("media_error")
+    elif phrase.startswith(("notify ", "notification ", "नोटिफिकेशन ")):
+        message = re.sub(r"^(notify|notification|नोटिफिकेशन)\s+", "", phrase).strip()
+        say("notification_done") if send_notification(message) else say("action_error")
+    elif phrase.startswith(("open settings ", "settings ", "सेटिंग खोलो ")):
+        setting = re.sub(r"^(open settings|settings|सेटिंग खोलो)\s+", "", phrase).strip()
+        setting = {"वाईफाई":"wifi", "वाइफाई":"wifi", "ब्लूटूथ":"bluetooth", "डिस्प्ले":"display", "साउंड":"sound", "ऐप":"apps", "सिक्योरिटी":"security"}.get(setting, setting)
+        say("settings_open", setting=setting) if open_settings_page(setting) else say("settings_error")
     elif phrase in ("stopwatch start", "start stopwatch", "स्टॉपवॉच शुरू", "स्टॉपवॉच स्टार्ट"):
         global STOPWATCH_START
         STOPWATCH_START = time.monotonic()
@@ -460,7 +607,9 @@ def diagnostics():
                     "termux-battery-status", "termux-open-url",
                     "termux-torch", "termux-vibrate", "termux-contact-list",
                     "termux-telephony-call", "termux-sms-send", "monkey",
-                    "termux-wifi-connectioninfo", "termux-bluetoothinfo"):
+                    "termux-wifi-connectioninfo", "termux-bluetoothinfo",
+                    "termux-volume", "termux-brightness", "termux-media-player",
+                    "termux-notification", "am"):
         print(f"{command}: {'FOUND' if shutil.which(command) else 'MISSING'}")
     print(f"Voice preset: {settings['voice']}")
     print(f"Language: {settings['language']}")
