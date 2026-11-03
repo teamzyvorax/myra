@@ -1,142 +1,202 @@
 #!/usr/bin/env python3
-"""MYRA — free Termux voice assistant starter for Android."""
+"""MYRA — free Termux voice assistant for Android."""
 
 from datetime import datetime
 import json
 import shutil
 import subprocess
 import sys
-import time
+from pathlib import Path
 
 APP_NAME = "MYRA"
-SETTINGS_FILE = "settings.json"
-
+BASE_DIR = Path(__file__).resolve().parent
+SETTINGS_FILE = BASE_DIR / "settings.json"
 PRESETS = {
-    "male": {"pitch": "0.78", "rate": "0.92"},
-    "female": {"pitch": "1.18", "rate": "1.00"},
+    "male": {"pitch": "0.82", "rate": "0.94"},
+    "female": {"pitch": "1.12", "rate": "1.00"},
+}
+
+TEXT = {
+    "en": {
+        "online": "Hello. MYRA is online. Say help for commands.",
+        "help": "Commands: help, time, battery, youtube, browser, male, female, hindi, english, voice, language, exit.",
+        "hello": "Hello! I am MYRA. How can I help you?",
+        "time": "The time is {value}.",
+        "battery": "Battery is {value} percent.",
+        "battery_error": "Battery status needs the Termux API app and package.",
+        "youtube": "Opening YouTube.",
+        "browser": "Opening Google in your browser.",
+        "voice_male": "Male-style voice preset selected.",
+        "voice_female": "Female-style voice preset selected.",
+        "lang_hi": "Hindi selected.",
+        "lang_en": "English selected.",
+        "unknown": "I can handle basic phone commands right now. Say help for the command list.",
+        "empty": "I did not hear that. Please try again.",
+        "bye": "Goodbye. MYRA going offline.",
+    },
+    "hi": {
+        "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
+        "help": "कमांड: हेल्प, टाइम, बैटरी, यूट्यूब, ब्राउज़र, मेल, फीमेल, हिंदी, इंग्लिश और एग्जिट।",
+        "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
+        "time": "अभी समय है {value}।",
+        "battery": "बैटरी {value} प्रतिशत है।",
+        "battery_error": "बैटरी जानकारी के लिए Termux API ऐप और पैकेज चाहिए।",
+        "youtube": "यूट्यूब खोल रही हूँ।",
+        "browser": "ब्राउज़र में गूगल खोल रही हूँ।",
+        "voice_male": "मेल वॉइस प्रीसेट चुना गया।",
+        "voice_female": "फीमेल वॉइस प्रीसेट चुना गया।",
+        "lang_hi": "हिंदी चुनी गई।",
+        "lang_en": "इंग्लिश चुनी गई।",
+        "unknown": "मैं अभी बेसिक फोन कमांड कर सकती हूँ। कमांड सुनने के लिए हेल्प बोलिए।",
+        "empty": "आवाज़ समझ नहीं आई। फिर से बोलिए।",
+        "bye": "अलविदा। MYRA बंद हो रही है।",
+    },
 }
 
 def load_settings():
     defaults = {"voice": "male", "language": "en"}
     try:
-        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
-            saved = json.load(f)
-        defaults.update(saved if isinstance(saved, dict) else {})
+        saved = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+        if isinstance(saved, dict):
+            defaults.update(saved)
     except (OSError, json.JSONDecodeError):
         pass
     if defaults.get("voice") not in PRESETS:
         defaults["voice"] = "male"
-    if defaults.get("language") not in ("en", "hi"):
+    if defaults.get("language") not in TEXT:
         defaults["language"] = "en"
     return defaults
 
 settings = load_settings()
 
 def save_settings():
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=2)
+    SETTINGS_FILE.write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
-def say(message):
-    print(f"\n{APP_NAME}: {message}")
-    if shutil.which("termux-tts-speak"):
-        preset = PRESETS[settings["voice"]]
-        lang = "hi-IN" if settings["language"] == "hi" else "en-US"
-        try:
-            subprocess.run(
-                ["termux-tts-speak", "-l", lang, "-p", preset["pitch"],
-                 "-r", preset["rate"], message],
-                check=False, timeout=30, stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except (OSError, subprocess.TimeoutExpired):
-            print("(TTS unavailable; showing text instead.)")
-    else:
-        print("(Install Termux:API to enable spoken replies.)")
+def say(key, **values):
+    message = TEXT[settings["language"]].get(key, key).format(**values)
+    print(f"\n{APP_NAME}: {message}", flush=True)
+    executable = shutil.which("termux-tts-speak")
+    if not executable:
+        print("(TTS unavailable: install Termux:API.)")
+        return
+    preset = PRESETS[settings["voice"]]
+    language = "hi-IN" if settings["language"] == "hi" else "en-US"
+    try:
+        subprocess.run(
+            [executable, "-l", language, "-p", preset["pitch"], "-r",
+             preset["rate"], message],
+            check=False, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        print("(Could not start Android text-to-speech.)")
 
 def listen():
-    if shutil.which("termux-speech-to-text"):
+    executable = shutil.which("termux-speech-to-text")
+    if executable:
         try:
             result = subprocess.run(
-                ["termux-speech-to-text"], capture_output=True, text=True,
+                [executable], capture_output=True, text=True,
                 timeout=45, check=False,
             )
             phrase = result.stdout.strip()
             if phrase:
-                print(f"You: {phrase}")
+                print(f"You: {phrase}", flush=True)
                 return phrase.lower()
         except (OSError, subprocess.TimeoutExpired):
-            pass
+            print("(Speech input unavailable; switching to typed input.)")
     return input("\nYou (type): ").strip().lower()
 
-def run_api(command):
-    if not shutil.which(command[0]):
+def run_api(*command):
+    executable = shutil.which(command[0])
+    if not executable:
         return None
     try:
-        return subprocess.run(command, capture_output=True, text=True,
-                              timeout=15, check=False)
+        return subprocess.run(
+            [executable, *command[1:]], capture_output=True,
+            text=True, timeout=15, check=False,
+        )
     except (OSError, subprocess.TimeoutExpired):
         return None
 
-def help_text():
-    return ("Commands: help, time, battery, youtube, browser, voice, "
-            "language, exit. You can also say hello.")
+def set_voice(voice):
+    settings["voice"] = voice
+    save_settings()
+    say("voice_" + voice)
 
-def handle(text):
-    text = text.strip().lower()
-    if not text:
-        say("I did not hear that. Please try again." if settings["language"] == "en"
-            else "मुझे सुनाई नहीं दिया। फिर से बोलिए।")
-    elif text in ("exit", "quit", "stop", "बंद", "बंद करो"):
-        say("Goodbye. MYRA going offline.")
+def set_language(language):
+    settings["language"] = language
+    save_settings()
+    say("lang_hi" if language == "hi" else "lang_en")
+
+def handle(phrase):
+    phrase = phrase.strip().lower()
+    if not phrase:
+        say("empty")
+    elif phrase in ("exit", "quit", "stop", "बंद", "बंद करो", "एग्जिट"):
+        say("bye")
         return False
-    elif text in ("help", "commands", "मदद", "कमांड"):
-        say(help_text())
-    elif "time" in text or "समय" in text or "टाइम" in text:
-        now = datetime.now().strftime("%I:%M %p")
-        say("The time is " + now)
-    elif "battery" in text or "बैटरी" in text:
-        result = run_api(["termux-battery-status"])
-        if result and result.returncode == 0:
-            try:
-                data = json.loads(result.stdout)
-                say(f"Battery is {data.get('percentage', 'unknown')} percent.")
-            except json.JSONDecodeError:
-                say("Battery information received, but could not be read.")
-        else:
-            say("Battery status needs the Termux API app and package.")
-    elif "youtube" in text or "यूट्यूब" in text:
-        run_api(["termux-open-url", "https://www.youtube.com"])
-        say("Opening YouTube.")
-    elif "browser" in text or "google" in text or "search" in text:
-        run_api(["termux-open-url", "https://www.google.com"])
-        say("Opening your browser.")
-    elif text in ("voice", "change voice", "आवाज", "वॉइस"):
-        settings["voice"] = "female" if settings["voice"] == "male" else "male"
-        save_settings()
-        say("Female-style voice selected." if settings["voice"] == "female"
-            else "Male-style voice selected.")
-    elif text in ("language", "भाषा"):
-        settings["language"] = "hi" if settings["language"] == "en" else "en"
-        save_settings()
-        say("Hindi selected." if settings["language"] == "hi" else "English selected.")
-    elif any(word in text for word in ("hello", "hi", "नमस्ते", "हेलो")):
-        say("Hello! I am MYRA. How can I help you?")
+    elif phrase in ("help", "commands", "मदद", "हेल्प", "कमांड"):
+        say("help")
+    elif phrase in ("male", "man voice", "मेल", "पुरुष आवाज"):
+        set_voice("male")
+    elif phrase in ("female", "woman voice", "फीमेल", "महिला आवाज"):
+        set_voice("female")
+    elif phrase in ("voice", "change voice", "आवाज", "वॉइस"):
+        set_voice("female" if settings["voice"] == "male" else "male")
+    elif phrase in ("hindi", "हिंदी"):
+        set_language("hi")
+    elif phrase in ("english", "इंग्लिश", "अंग्रेजी"):
+        set_language("en")
+    elif phrase in ("language", "भाषा"):
+        set_language("hi" if settings["language"] == "en" else "en")
+    elif "time" in phrase or "समय" in phrase or "टाइम" in phrase:
+        say("time", value=datetime.now().strftime("%I:%M %p"))
+    elif "battery" in phrase or "बैटरी" in phrase:
+        result = run_api("termux-battery-status")
+        try:
+            data = json.loads(result.stdout) if result and result.returncode == 0 else {}
+            if "percentage" in data:
+                say("battery", value=data["percentage"])
+            else:
+                say("battery_error")
+        except json.JSONDecodeError:
+            say("battery_error")
+    elif "youtube" in phrase or "यूट्यूब" in phrase:
+        result = run_api("termux-open-url", "https://www.youtube.com")
+        say("youtube" if result and result.returncode == 0 else "unknown")
+    elif any(word in phrase for word in ("browser", "google", "search", "ब्राउज़र", "गूगल")):
+        result = run_api("termux-open-url", "https://www.google.com")
+        say("browser" if result and result.returncode == 0 else "unknown")
+    elif any(word in phrase for word in ("hello", "hi", "नमस्ते", "हेलो")):
+        say("hello")
     else:
-        say("I can handle basic phone commands right now. Say help to hear the list.")
+        say("unknown")
     return True
 
+def diagnostics():
+    print("\nMYRA SYSTEM CHECK")
+    for command in ("termux-speech-to-text", "termux-tts-speak",
+                    "termux-battery-status", "termux-open-url"):
+        print(f"{command}: {'FOUND' if shutil.which(command) else 'MISSING'}")
+    print(f"Voice preset: {settings['voice']}")
+    print(f"Language: {settings['language']}")
+    print("Note: install the Termux:API Android app and grant microphone permission.")
+
 def main():
+    if "--check" in sys.argv:
+        diagnostics()
+        return
     print("\n╔══════════════════════════════╗")
     print("║       Z Y V O R A  /  MYRA   ║")
     print("║       PHONE VOICE ASSISTANT  ║")
     print("╚══════════════════════════════╝")
-    say("Hello. MYRA is online. Say help for commands.")
+    say("online")
     while True:
         try:
             if not handle(listen()):
                 break
-        except KeyboardInterrupt:
-            say("MYRA stopped.")
+        except (KeyboardInterrupt, EOFError):
+            say("bye")
             break
 
 if __name__ == "__main__":
