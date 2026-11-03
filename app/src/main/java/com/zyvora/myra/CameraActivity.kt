@@ -140,7 +140,7 @@ class CameraActivity : Activity(), TextToSpeech.OnInitListener {
         super.onDestroy()
         cameraExecutor.shutdown()
         if (::tts.isInitialized) tts.shutdown()
-        if (::recognizer.isInitialized) recognizer.close()
-        if (::labeler.isInitialized) labeler.close()
+        recognizer.close()
+        labeler.close()
     }
 }
