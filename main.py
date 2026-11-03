@@ -329,6 +329,38 @@ def handle(phrase):
             start_timer(int(match.group(1)))
         else:
             say("timer_usage")
+    elif phrase in ("wifi", "wifi status", "वाईफाई", "वाईफाई स्टेटस"):
+        result = run_api("termux-wifi-connectioninfo")
+        try:
+            info = json.loads(result.stdout) if result and result.returncode == 0 else {}
+            if info:
+                safe_info = {k: info.get(k) for k in ("ssid", "ip", "link_speed_mbps", "frequency_mhz") if info.get(k) is not None}
+                print("Wi-Fi:", json.dumps(safe_info, ensure_ascii=False))
+            else:
+                say("wifi_error")
+        except json.JSONDecodeError:
+            say("wifi_error")
+    elif phrase in ("bluetooth", "bluetooth status", "ब्लूटूथ", "ब्लूटूथ स्टेटस"):
+        result = run_api("termux-bluetoothinfo")
+        try:
+            info = json.loads(result.stdout) if result and result.returncode == 0 else {}
+            if info:
+                print("Bluetooth:", json.dumps(info, ensure_ascii=False))
+            else:
+                say("bluetooth_error")
+        except json.JSONDecodeError:
+            say("bluetooth_error")
+    elif phrase in ("battery details", "बैटरी डिटेल्स"):
+        result = run_api("termux-battery-status")
+        try:
+            info = json.loads(result.stdout) if result and result.returncode == 0 else {}
+            if info:
+                say("battery_details")
+                print(json.dumps(info, ensure_ascii=False, indent=2))
+            else:
+                say("battery_error")
+        except json.JSONDecodeError:
+            say("battery_error")
     elif phrase in ("flashlight on", "torch on", "टॉर्च चालू", "लाइट चालू"):
         result = run_api("termux-torch", "on")
         say("torch_on" if result and result.returncode == 0 else "torch_error")
@@ -380,7 +412,8 @@ def diagnostics():
     for command in ("termux-speech-to-text", "termux-tts-speak",
                     "termux-battery-status", "termux-open-url",
                     "termux-torch", "termux-vibrate", "termux-contact-list",
-                    "termux-telephony-call", "termux-sms-send", "monkey"):
+                    "termux-telephony-call", "termux-sms-send", "monkey",
+                    "termux-wifi-connectioninfo", "termux-bluetoothinfo"):
         print(f"{command}: {'FOUND' if shutil.which(command) else 'MISSING'}")
     print(f"Voice preset: {settings['voice']}")
     print(f"Language: {settings['language']}")
