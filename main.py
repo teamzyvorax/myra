@@ -396,7 +396,7 @@ def open_youtube_search(query, live=False):
     return bool(result and result.returncode == 0)
 
 def companion_command(command, text=""):
-    allowed = {"scroll_up", "scroll_down", "back", "like", "open_comments", "lock_screen", "type_comment"}
+    allowed = {"scroll_up", "scroll_down", "back", "like", "open_comments", "lock_screen", "type_comment", "open_app"}
     if command not in allowed or not shutil.which("am"):
         return False
     args = ["am", "start", "-n", "com.zyvora.myra/.CommandActivity", "--es", "command", command]
@@ -469,8 +469,8 @@ def handle(phrase):
             say("sms_confirm", number=PENDING_ACTION["number"], message=parts[2])
         else:
             say("sms_usage")
-    elif phrase.startswith(("open app ", "launch ", "ऐप खोलो ")):
-        app = re.sub(r"^(open app|launch|ऐप खोलो)\s+", "", phrase).strip()
+    elif phrase.startswith(("open app ", "launch ", "ऐप खोलो ")) or (phrase.startswith("open ") and not phrase.startswith(("open settings ", "open youtuber ", "open streamer ", "open live stream "))):
+        app = re.sub(r"^(open app|open|launch|ऐप खोलो)\s+", "", phrase).strip()
         launch_app(app)
     elif phrase.startswith(("note ", "नोट ")):
         note = phrase.split(" ", 1)[1].strip()
