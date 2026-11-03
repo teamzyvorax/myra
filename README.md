@@ -10,6 +10,11 @@ A free, Termux-first Android voice assistant using Android speech recognition, A
 - Battery status
 - Flashlight on/off (requires Termux:API and device support)
 - Phone vibration (requires Termux:API)
+- Media volume control (music/ring/alarm/notification/system/call streams where Android permits)
+- Screen brightness control (0–255; device and Android policy dependent)
+- Music playback/pause/resume/stop for audio files in Termux shared Music storage
+- Android notifications from spoken messages
+- Shortcuts to Wi-Fi, Bluetooth, display, sound, app and security settings
 - Google web search by voice or typed command
 - Safe app launcher for WhatsApp, Chrome, YouTube, Settings, Maps and Gmail
 - Contact lookup by name (requires contacts permission)
@@ -35,6 +40,7 @@ pkg update -y && pkg upgrade -y
 pkg install python termux-api git -y
 git clone https://github.com/teamzyvorax/myra.git
 cd myra
+termux-setup-storage
 python main.py
 ```
 
@@ -67,6 +73,15 @@ python main.py
 | wifi / wifi status | Show available Wi-Fi connection details |
 | bluetooth / bluetooth status | Show Bluetooth status details |
 | battery details | Show detailed battery status |
+| volume up / volume down | Raise or lower music volume |
+| volume music 70 | Set music volume to about 70% (device maximum is detected when available) |
+| brightness 120 | Set screen brightness (0–255) |
+| play music song.mp3 | Play a file from shared Music storage |
+| pause music / resume music / stop music | Control MYRA's media player |
+| notify Meeting starts in 5 minutes | Post an Android notification |
+| open settings wifi | Open Android Wi-Fi settings |
+| open settings bluetooth | Open Android Bluetooth settings |
+| open settings display / sound / apps / security | Open the matching Android settings page |
 | confirm / हाँ | Confirm a pending call or SMS |
 | cancel / नहीं | Cancel a pending call or SMS |
 | youtube / यूट्यूब | Open YouTube |
@@ -90,7 +105,10 @@ python main.py
 - Timers and reminders alert only while MYRA's Python process is running; they are not Android system alarms and will not survive closing MYRA or rebooting the phone.
 - The stopwatch runs only while MYRA is open; it is not a background service.
 - Notes are stored locally in `notes.json` in the project folder.
-- Install the Termux:API Android companion app and grant microphone, camera/torch, vibration, contacts, phone and SMS permissions only if you use those features.
+- Install the Termux:API Android companion app from the same source as Termux. Grant only the Android permissions for features you actually use.
+- Run `termux-setup-storage` to let MYRA access the shared Music folder. Music playback is restricted to audio files inside shared Music storage or the MYRA project folder.
+- Android may block direct changes to Wi-Fi/Bluetooth radios and some system settings. MYRA opens the relevant Settings page instead of bypassing Android restrictions.
+- Brightness, volume, media, notifications and app launching depend on Android version, device manufacturer, Termux:API version and granted permissions.
 - Calls and SMS are never initiated until you explicitly say/type `confirm`; `cancel` discards the pending action.
 - App launching is restricted to MYRA's built-in allowlist; arbitrary package or shell commands are not accepted.
 - MYRA does not send chat history to a MYRA server and does not execute arbitrary spoken shell commands.
