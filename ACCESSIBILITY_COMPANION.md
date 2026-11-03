@@ -26,3 +26,16 @@ For comment text:
 am start -n com.zyvora.myra/.CommandActivity --es command type_comment --es text "Your comment"
 
 Review and manually post comments in YouTube. Accessibility access is powerful. Enable it only if you trust this app, and disable it in Android Settings when not needed.
+
+
+## Open any Android app by voice
+
+The companion now checks launchable installed apps by their visible app name. If it cannot find a matching installed app, it opens Google Play Store search for that name (or the Play Store web search if the Play Store app is unavailable).
+
+Examples:
+- `open app Instagram`
+- `open app WhatsApp`
+- `open app Spotify`
+- `ऐप खोलो Snapchat`
+
+The Android manifest queries launchable activities only; it does not request unrestricted access to every installed package. The Play Store opens a search result page; MYRA does not silently install apps. You choose the app and tap Install yourself.
