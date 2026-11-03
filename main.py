@@ -47,12 +47,12 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, play love song for a random romantic YouTube search, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
+        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, play love song, open youtuber NAME, open streamer NAME, youtube search QUERY, open live stream NAME, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
         "battery_error": "Battery status needs the Termux API app and package.",
-        "youtube": "Opening YouTube.", "browser": "Opening Google in your browser.",
+        "youtube": "Opening YouTube.", "youtube_search": "Searching YouTube for {query}.", "browser": "Opening Google in your browser.",
         "voice_male": "Male-style voice preset selected.",
         "voice_female": "Female-style voice preset selected.",
         "lang_hi": "Hindi selected.", "lang_en": "English selected.",
@@ -100,12 +100,12 @@ TEXT = {
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, लव सॉन्ग चलाओ for random romantic YouTube song, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps/speech, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, वॉल्यूम बढ़ाओ/कम करो, वॉल्यूम म्यूजिक 70, ब्राइटनेस 120, गाना चलाओ song.mp3, लव सॉन्ग चलाओ, यूट्यूबर खोलो NAME, यूट्यूब पर खोजो QUERY, लाइव स्ट्रीम खोलो NAME, म्यूजिक पॉज/चालू/बंद, नोटिफिकेशन संदेश, सेटिंग खोलो wifi/bluetooth/display/sound/apps/speech, टॉर्च, वाइब्रेट, सर्च, नोट, टाइमर, रिमाइंडर, ऐप खोलो, कॉन्टैक्ट, कॉल/SMS कन्फर्मेशन के साथ, हेल्प, एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
         "battery_error": "बैटरी जानकारी के लिए Termux API ऐप और पैकेज चाहिए।",
-        "youtube": "यूट्यूब खोल रही हूँ।", "browser": "ब्राउज़र में गूगल खोल रही हूँ।",
+        "youtube": "यूट्यूब खोल रही हूँ।", "youtube_search": "YouTube पर {query} खोज रही हूँ।", "browser": "ब्राउज़र में गूगल खोल रही हूँ।",
         "voice_male": "मेल वॉइस प्रीसेट चुना गया।",
         "voice_female": "फीमेल वॉइस प्रीसेट चुना गया।",
         "lang_hi": "हिंदी चुनी गई।", "lang_en": "इंग्लिश चुनी गई।",
@@ -380,6 +380,16 @@ def play_random_love_song():
     result = run_api("termux-open-url", url)
     return bool(result and result.returncode == 0)
 
+def open_youtube_search(query, live=False):
+    query = query.strip()[:180]
+    if not query:
+        return False
+    if live:
+        query += " live stream"
+    url = "https://www.youtube.com/results?search_query=" + quote(query)
+    result = run_api("termux-open-url", url)
+    return bool(result and result.returncode == 0)
+
 def send_notification(message):
     message = message.strip()[:500]
     if not message:
@@ -601,6 +611,12 @@ def handle(phrase):
             say("battery", value=data["percentage"]) if "percentage" in data else say("battery_error")
         except (json.JSONDecodeError, TypeError):
             say("battery_error")
+    elif phrase.startswith(("open youtuber ", "open streamer ", "youtube search ", "search youtube ", "यूट्यूबर खोलो ", "यूट्यूब पर खोजो ")):
+        query = re.sub(r"^(open youtuber|open streamer|youtube search|search youtube|यूट्यूबर खोलो|यूट्यूब पर खोजो)\\s+", "", phrase).strip()
+        say("youtube_search", query=query) if open_youtube_search(query) else say("action_error")
+    elif phrase.startswith(("open live stream ", "live stream ", "लाइव स्ट्रीम खोलो ")):
+        query = re.sub(r"^(open live stream|live stream|लाइव स्ट्रीम खोलो)\\s+", "", phrase).strip()
+        say("youtube_search", query=query) if open_youtube_search(query, live=True) else say("action_error")
     elif "youtube" in phrase or "यूट्यूब" in phrase:
         result = run_api("termux-open-url", "https://www.youtube.com")
         say("youtube" if result and result.returncode == 0 else "unknown")
