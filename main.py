@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import threading
+from urllib.parse import quote
 from pathlib import Path
 
 APP_NAME = "MYRA"
@@ -31,7 +32,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, calculator, note followed by text, show notes, timer followed by minutes, YouTube, browser, male, female, Hindi, English, help, exit.",
+        "help": "Commands: time, date, battery, flashlight on/off, vibrate, search followed by words, calculator, note followed by text, show notes, timer followed by minutes, YouTube, browser, male, female, Hindi, English, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -50,10 +51,14 @@ TEXT = {
         "timer_usage": "Say timer followed by a number of minutes.",
         "calc_error": "I could not calculate that. Try a simple arithmetic expression.",
         "calc_result": "The answer is {answer}.",
+        "torch_on": "Flashlight turned on.", "torch_off": "Flashlight turned off.",
+        "torch_error": "Flashlight control is unavailable. Check Termux API.",
+        "vibrate": "Vibrating the phone.", "vibrate_error": "Vibration is unavailable.",
+        "search": "Searching the web for {query}.",
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, कैलकुलेटर, नोट के बाद अपना नोट, नोट्स दिखाओ, टाइमर के बाद मिनट, यूट्यूब, ब्राउज़र, मेल, फीमेल, हिंदी, इंग्लिश, हेल्प और एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, टॉर्च चालू, टॉर्च बंद, वाइब्रेट, सर्च के बाद शब्द, कैलकुलेटर, नोट, नोट्स दिखाओ, टाइमर, यूट्यूब, ब्राउज़र, मेल, फीमेल, हिंदी, इंग्लिश, हेल्प और एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
@@ -72,6 +77,10 @@ TEXT = {
         "timer_usage": "टाइमर बोलकर मिनट की संख्या बताइए।",
         "calc_error": "हिसाब नहीं हो पाया। आसान गणित का सवाल बोलिए।",
         "calc_result": "जवाब है {answer}।",
+        "torch_on": "फोन की टॉर्च चालू हो गई।", "torch_off": "फोन की टॉर्च बंद हो गई।",
+        "torch_error": "टॉर्च कंट्रोल उपलब्ध नहीं है। Termux API चेक करें।",
+        "vibrate": "फोन वाइब्रेट हो रहा है।", "vibrate_error": "वाइब्रेशन उपलब्ध नहीं है।",
+        "search": "{query} के लिए इंटरनेट पर खोज रही हूँ।",
     },
 }
 
@@ -229,6 +238,22 @@ def handle(phrase):
             start_timer(int(match.group(1)))
         else:
             say("timer_usage")
+    elif phrase in ("flashlight on", "torch on", "टॉर्च चालू", "लाइट चालू"):
+        result = run_api("termux-torch", "on")
+        say("torch_on" if result and result.returncode == 0 else "torch_error")
+    elif phrase in ("flashlight off", "torch off", "टॉर्च बंद", "लाइट बंद"):
+        result = run_api("termux-torch", "off")
+        say("torch_off" if result and result.returncode == 0 else "torch_error")
+    elif phrase in ("vibrate", "वाइब्रेट", "कंपन"):
+        result = run_api("termux-vibrate", "-d", "300")
+        say("vibrate" if result and result.returncode == 0 else "vibrate_error")
+    elif phrase.startswith(("search ", "सर्च ")):
+        query = re.sub(r"^(search|सर्च)\\s+", "", phrase).strip()
+        if query:
+            result = run_api("termux-open-url", "https://www.google.com/search?q=" + quote(query))
+            say("search", query=query) if result and result.returncode == 0 else say("unknown")
+        else:
+            say("unknown")
     elif phrase.startswith(("calculate ", "calculator ", "गणना ")):
         expression = re.sub(r"^(calculate|calculator|गणना)\s+", "", phrase)
         try:
@@ -262,7 +287,8 @@ def handle(phrase):
 def diagnostics():
     print("\nMYRA SYSTEM CHECK")
     for command in ("termux-speech-to-text", "termux-tts-speak",
-                    "termux-battery-status", "termux-open-url"):
+                    "termux-battery-status", "termux-open-url",
+                    "termux-torch", "termux-vibrate"):
         print(f"{command}: {'FOUND' if shutil.which(command) else 'MISSING'}")
     print(f"Voice preset: {settings['voice']}")
     print(f"Language: {settings['language']}")
