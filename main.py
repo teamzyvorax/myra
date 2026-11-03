@@ -481,7 +481,7 @@ def handle(phrase):
         result = run_api("termux-media-player", "pause")
         say("media_done" if result and result.returncode == 0 else "media_error")
     elif phrase in ("resume music", "music resume", "म्यूजिक चालू", "गाना चालू करो"):
-        result = run_api("termux-media-player", "play")
+        result = run_api("termux-media-player", "resume")
         say("media_done" if result and result.returncode == 0 else "media_error")
     elif phrase in ("stop music", "music stop", "म्यूजिक बंद", "गाना बंद करो"):
         result = run_api("termux-media-player", "stop")
