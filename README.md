@@ -8,6 +8,9 @@ A free, Termux-first Android voice assistant using Android speech recognition, A
 - Male-style and female-style pitch/rate presets
 - Current time and date
 - Battery status
+- Flashlight on/off (requires Termux:API and device support)
+- Phone vibration (requires Termux:API)
+- Google web search by voice or typed command
 - Open YouTube and Google in the phone browser
 - Save notes and list the latest 20 notes
 - Basic safe calculator (arithmetic only; no Python code execution)
@@ -44,6 +47,10 @@ python main.py
 | time / समय | Current time |
 | date / तारीख | Current date |
 | battery / बैटरी | Battery percentage |
+| flashlight on / टॉर्च चालू | Turn phone flashlight on |
+| flashlight off / टॉर्च बंद | Turn phone flashlight off |
+| vibrate / वाइब्रेट | Vibrate phone briefly |
+| search cats / सर्च cats | Search Google for words |
 | youtube / यूट्यूब | Open YouTube |
 | browser / गूगल | Open Google |
 | male / मेल | Male-style voice preset |
@@ -61,5 +68,5 @@ python main.py
 - Speech recognition may need internet depending on the Android recognizer selected on the phone.
 - Countdown timers alert only while MYRA's Python process is running; they are not Android system alarms.
 - Notes are stored locally in `notes.json` in the project folder.
-- Install the Termux:API Android companion app and grant microphone permission.
+- Install the Termux:API Android companion app and grant microphone, camera/torch, and vibration permissions when Android requests them.
 - MYRA does not send chat history to a MYRA server and does not execute arbitrary spoken shell commands.
