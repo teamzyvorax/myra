@@ -1,22 +1,23 @@
 # MYRA — ZYVORA Phone Voice Assistant
 
-A free, Termux-first Android voice assistant. Basic features use Android speech recognition, Android Text-to-Speech, and Termux:API. No paid API key is required.
+A free, Termux-first Android voice assistant using Android speech recognition, Android Text-to-Speech, and Termux:API. No paid API key is required for the built-in features.
 
 ## Features
-- Voice input using `termux-speech-to-text`
-- Spoken replies using `termux-tts-speak`
-- Male-style and female-style pitch/rate presets
+- Voice input and spoken replies
 - Hindi and English response modes
-- Time, battery, YouTube, browser, help, and exit commands
-- Typed-input fallback
-- System diagnostics with `python main.py --check`
+- Male-style and female-style pitch/rate presets
+- Current time and date
+- Battery status
+- Open YouTube and Google in the phone browser
+- Save notes and list the latest 20 notes
+- Basic safe calculator (arithmetic only; no Python code execution)
+- Countdown timers with spoken completion alert while MYRA remains running
+- Typed-input fallback and system diagnostics
 - No arbitrary shell-command execution
 
-## Quick install
+## Install
 
-Install Termux and Termux:API from the same trusted source. F-Droid is recommended; do not mix builds from different sources.
-
-In Termux:
+Install Termux and the Termux:API Android app from the same trusted source (F-Droid is recommended). In Termux:
 
 ```bash
 pkg update -y && pkg upgrade -y
@@ -31,38 +32,34 @@ For an existing checkout:
 ```bash
 cd ~/myra
 git pull
+python main.py --check
 python main.py
 ```
 
 ## Commands
 
-| Say/type | Action |
+| Say or type | Action |
 |---|---|
 | help / हेल्प | List commands |
 | time / समय | Current time |
+| date / तारीख | Current date |
 | battery / बैटरी | Battery percentage |
 | youtube / यूट्यूब | Open YouTube |
 | browser / गूगल | Open Google |
-| male / मेल | Male-style preset |
-| female / फीमेल | Female-style preset |
+| male / मेल | Male-style voice preset |
+| female / फीमेल | Female-style voice preset |
 | hindi / हिंदी | Hindi replies |
 | english | English replies |
-| voice | Toggle voice preset |
-| language | Toggle language |
+| note buy milk | Save a note |
+| show notes / नोट्स दिखाओ | List saved notes |
+| calculate 12 * 8 | Calculate arithmetic |
+| timer 5 | Start a 5-minute countdown |
 | exit | Quit MYRA |
 
-## Diagnostics
-
-```bash
-python main.py --check
-```
-
-Install the Android **Termux:API** companion app and grant microphone permission. Termux and Termux:API must come from the same distribution source.
-
-## Voice notes
-
-Male/female are pitch and rate presets, not guaranteed gender-specific voices. The actual voice depends on the voices installed in Android Settings → Text-to-speech output. Speech recognition can depend on the Android recognizer and may require internet depending on device settings.
-
-## Privacy and safety
-
-MYRA does not upload chat history to a MYRA server. Android's configured speech recognizer may process voice input according to that service's own privacy settings. MYRA does not execute arbitrary spoken shell commands.
+## Important notes
+- Male/female are pitch/rate presets, not guaranteed gender-specific voices. Actual voice depends on Android's installed TTS voices.
+- Speech recognition may need internet depending on the Android recognizer selected on the phone.
+- Countdown timers alert only while MYRA's Python process is running; they are not Android system alarms.
+- Notes are stored locally in `notes.json` in the project folder.
+- Install the Termux:API Android companion app and grant microphone permission.
+- MYRA does not send chat history to a MYRA server and does not execute arbitrary spoken shell commands.
