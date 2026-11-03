@@ -47,7 +47,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, play love song, open youtuber NAME, open streamer NAME, youtube search QUERY, open live stream NAME, scroll up/down, go back, like video, open comments, type comment TEXT, lock phone, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app chrome, contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
+        "help": "Commands: time, date, battery, volume up/down, volume music 70, brightness 120, play music song.mp3, play love song, open youtuber NAME, open streamer NAME, youtube search QUERY, open live stream NAME, scroll up/down, go back, like video, open comments, type comment TEXT, lock phone, pause/resume/stop music, notify message, open settings wifi/bluetooth/display/sound/apps/security/speech, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, timer 5, remind 5 drink water, open app APP NAME (opens installed app or Play Store search), contacts, call/SMS with confirmation, wifi, bluetooth, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -302,12 +302,17 @@ def list_contacts(query=""):
             print(f"{name}: {number}")
 
 def launch_app(app):
-    package = APP_PACKAGES.get(app)
-    if not package:
-        say("app_unknown")
-        return
-    result = run_api("monkey", "-p", package, "-c", "android.intent.category.LAUNCHER", "1")
-    say("app_open", app=app) if result and result.returncode == 0 else say("action_error")
+    app = app.strip()[:80]
+    package = APP_PACKAGES.get(app.lower())
+    if package:
+        result = run_api("monkey", "-p", package, "-c", "android.intent.category.LAUNCHER", "1")
+        if result and result.returncode == 0:
+            say("app_open", app=app)
+            return
+    if companion_command("open_app", app):
+        say("app_open", app=app)
+    else:
+        say("action_error")
 
 def set_volume(stream, level):
     allowed = {"music", "ring", "alarm", "notification", "system", "call"}
