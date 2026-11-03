@@ -236,7 +236,10 @@ def start_timer(minutes, reminder=None):
     timer.daemon = True
     timer.start()
     TIMERS.append(timer)
-    say("timer_set", minutes=minutes)
+    if reminder:
+        say("reminder_set", minutes=minutes, message=reminder)
+    else:
+        say("timer_set", minutes=minutes)
 
 
 def list_contacts(query=""):
@@ -371,7 +374,6 @@ def handle(phrase):
         if match and 0 < int(match.group(1)) <= 1440:
             minutes, message = int(match.group(1)), match.group(2).strip()
             start_timer(minutes, message)
-            say("reminder_set", minutes=minutes, message=message)
         else:
             say("timer_usage")
     elif phrase in ("wifi", "wifi status", "वाईफाई", "वाईफाई स्टेटस"):
