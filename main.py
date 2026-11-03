@@ -390,6 +390,16 @@ def open_youtube_search(query, live=False):
     result = run_api("termux-open-url", url)
     return bool(result and result.returncode == 0)
 
+def companion_command(command, text=""):
+    allowed = {"scroll_up", "scroll_down", "back", "like", "open_comments", "lock_screen", "type_comment"}
+    if command not in allowed or not shutil.which("am"):
+        return False
+    args = ["am", "start", "-n", "com.zyvora.myra/.CommandActivity", "--es", "command", command]
+    if text:
+        args += ["--es", "text", text[:500]]
+    result = run_api(*args)
+    return bool(result and result.returncode == 0)
+
 def send_notification(message):
     message = message.strip()[:500]
     if not message:
@@ -611,6 +621,21 @@ def handle(phrase):
             say("battery", value=data["percentage"]) if "percentage" in data else say("battery_error")
         except (json.JSONDecodeError, TypeError):
             say("battery_error")
+    elif phrase in ("scroll down", "screen scroll down", "नीचे स्क्रॉल करो", "नीचे करो"):
+        say("action_done" if companion_command("scroll_down") else "action_error")
+    elif phrase in ("scroll up", "screen scroll up", "ऊपर स्क्रॉल करो", "ऊपर करो"):
+        say("action_done" if companion_command("scroll_up") else "action_error")
+    elif phrase in ("go back", "back", "go back youtube", "पीछे जाओ", "वापस जाओ"):
+        say("action_done" if companion_command("back") else "action_error")
+    elif phrase in ("like", "like video", "video like karo", "वीडियो लाइक करो", "लाइक करो"):
+        say("action_done" if companion_command("like") else "action_error")
+    elif phrase in ("open comments", "show comments", "कमेंट खोलो", "कमेंट्स खोलो"):
+        say("action_done" if companion_command("open_comments") else "action_error")
+    elif phrase.startswith(("type comment ", "कमेंट लिखो ")):
+        comment = re.sub(r"^(type comment|कमेंट लिखो)\\s+", "", phrase).strip()
+        say("action_done" if comment and companion_command("type_comment", comment) else "action_error")
+    elif phrase in ("lock phone", "lock screen", "phone lock karo", "फोन लॉक करो", "स्क्रीन लॉक करो"):
+        say("action_done" if companion_command("lock_screen") else "action_error")
     elif phrase.startswith(("open youtuber ", "open streamer ", "youtube search ", "search youtube ", "यूट्यूबर खोलो ", "यूट्यूब पर खोजो ")):
         query = re.sub(r"^(open youtuber|open streamer|youtube search|search youtube|यूट्यूबर खोलो|यूट्यूब पर खोजो)\s+", "", phrase).strip()
         say("youtube_search", query=query) if open_youtube_search(query) else say("action_error")
