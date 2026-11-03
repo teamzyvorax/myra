@@ -374,7 +374,7 @@ def open_settings_page(setting):
     return bool(result and result.returncode == 0)
 
 def play_random_love_song():
-    choices = ["Hindi romantic love songs", "Arijit Singh romantic songs", "90s Hindi romantic songs", "new Hindi love songs", "soft romantic Bollywood songs", "Hindi unplugged love songs"]
+    choices = ["Tum Hi Ho Arijit Singh", "Raabta Arijit Singh", "Kesariya Brahmastra", "Hawayein Arijit Singh", "Apna Bana Le Arijit Singh", "Tera Hone Laga Hoon Atif Aslam", "Raatan Lambiyan Jubin Nautiyal", "Shayad Arijit Singh"]
     query = random.choice(choices)
     url = "https://www.youtube.com/results?search_query=" + quote(query)
     result = run_api("termux-open-url", url)
