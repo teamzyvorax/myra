@@ -612,7 +612,7 @@ def handle(phrase):
         except (json.JSONDecodeError, TypeError):
             say("battery_error")
     elif phrase.startswith(("open youtuber ", "open streamer ", "youtube search ", "search youtube ", "यूट्यूबर खोलो ", "यूट्यूब पर खोजो ")):
-        query = re.sub(r"^(open youtuber|open streamer|youtube search|search youtube|यूट्यूबर खोलो|यूट्यूब पर खोजो)\\s+", "", phrase).strip()
+        query = re.sub(r"^(open youtuber|open streamer|youtube search|search youtube|यूट्यूबर खोलो|यूट्यूब पर खोजो)\s+", "", phrase).strip()
         say("youtube_search", query=query) if open_youtube_search(query) else say("action_error")
     elif phrase.startswith(("open live stream ", "live stream ", "लाइव स्ट्रीम खोलो ")):
         query = re.sub(r"^(open live stream|live stream|लाइव स्ट्रीम खोलो)\\s+", "", phrase).strip()
