@@ -5,7 +5,9 @@ from datetime import datetime
 import ast
 import json
 import operator
+import random
 import re
+import time
 import shutil
 import subprocess
 import sys
@@ -23,6 +25,7 @@ PRESETS = {
 }
 TIMERS = []
 PENDING_ACTION = None
+STOPWATCH_START = None
 APP_PACKAGES = {"whatsapp":"com.whatsapp","chrome":"com.android.chrome","youtube":"com.google.android.youtube","settings":"com.android.settings","maps":"com.google.android.apps.maps","gmail":"com.google.android.gm"}
 OPS = {
     ast.Add: operator.add, ast.Sub: operator.sub,
@@ -34,7 +37,7 @@ OPS = {
 TEXT = {
     "en": {
         "online": "Hello. MYRA is online. Say help for commands.",
-        "help": "Commands: time, date, battery, flashlight on/off, vibrate, search followed by words, calculator, note followed by text, show notes, timer followed by minutes, YouTube, browser, male, female, Hindi, English, help, exit.",
+        "help": "Commands: time, date, battery, flashlight on/off, vibrate, search words, calculate 12 * 8, note text, show notes, timer 5, remind 5 drink water, random 1 100, stopwatch start/stop, open app chrome, wifi, bluetooth, battery details, YouTube, browser, male/female, Hindi/English, help, exit.",
         "hello": "Hello! I am MYRA. How can I help you?",
         "time": "The time is {value}.", "date": "Today is {value}.",
         "battery": "Battery is {value} percent.",
@@ -51,6 +54,13 @@ TEXT = {
         "timer_set": "Timer set for {minutes} minutes.",
         "timer_done": "Your timer is finished.",
         "timer_usage": "Say timer followed by a number of minutes.",
+        "reminder_set": "Reminder set for {minutes} minutes: {message}.",
+        "random_result": "Your random number is {number}.",
+        "stopwatch_started": "Stopwatch started.", "stopwatch_result": "Elapsed time: {seconds} seconds.",
+        "stopwatch_idle": "Stopwatch is not running.",
+        "wifi_error": "Wi-Fi information is unavailable. Check Termux:API and permissions.",
+        "bluetooth_error": "Bluetooth information is unavailable. Check Termux:API and permissions.",
+        "battery_details": "Here are the battery details.",
         "calc_error": "I could not calculate that. Try a simple arithmetic expression.",
         "calc_result": "The answer is {answer}.",
         "torch_on": "Flashlight turned on.", "torch_off": "Flashlight turned off.",
@@ -68,7 +78,7 @@ TEXT = {
     },
     "hi": {
         "online": "नमस्ते। MYRA चालू है। कमांड सुनने के लिए हेल्प बोलिए।",
-        "help": "कमांड: टाइम, तारीख, बैटरी, टॉर्च चालू, टॉर्च बंद, वाइब्रेट, सर्च के बाद शब्द, कैलकुलेटर, नोट, नोट्स दिखाओ, टाइमर, यूट्यूब, ब्राउज़र, मेल, फीमेल, हिंदी, इंग्लिश, हेल्प और एग्जिट।",
+        "help": "कमांड: टाइम, तारीख, बैटरी, टॉर्च चालू/बंद, वाइब्रेट, सर्च शब्द, नोट लिखो, नोट्स दिखाओ, टाइमर 5, रिमाइंड 5 पानी पीना, रैंडम 1 100, स्टॉपवॉच स्टार्ट/स्टॉप, वाईफाई, ब्लूटूथ, यूट्यूब, ब्राउज़र, हेल्प, एग्जिट।",
         "hello": "नमस्ते! मैं MYRA हूँ। बताइए, क्या मदद करूँ?",
         "time": "अभी समय है {value}।", "date": "आज तारीख {value} है।",
         "battery": "बैटरी {value} प्रतिशत है।",
@@ -85,6 +95,13 @@ TEXT = {
         "timer_set": "{minutes} मिनट का टाइमर शुरू हो गया।",
         "timer_done": "आपका टाइमर पूरा हो गया।",
         "timer_usage": "टाइमर बोलकर मिनट की संख्या बताइए।",
+        "reminder_set": "{minutes} मिनट बाद रिमाइंडर: {message}।",
+        "random_result": "आपका रैंडम नंबर है {number}।",
+        "stopwatch_started": "स्टॉपवॉच शुरू हो गई।", "stopwatch_result": "बीता समय {seconds} सेकंड है।",
+        "stopwatch_idle": "स्टॉपवॉच चालू नहीं है।",
+        "wifi_error": "वाईफाई जानकारी उपलब्ध नहीं है। Termux API चेक करें।",
+        "bluetooth_error": "ब्लूटूथ जानकारी उपलब्ध नहीं है। Termux API चेक करें।",
+        "battery_details": "बैटरी की पूरी जानकारी यह है।"
         "calc_error": "हिसाब नहीं हो पाया। आसान गणित का सवाल बोलिए।",
         "calc_result": "जवाब है {answer}।",
         "torch_on": "फोन की टॉर्च चालू हो गई।", "torch_off": "फोन की टॉर्च बंद हो गई।",
@@ -327,6 +344,34 @@ def handle(phrase):
         match = re.search(r"(\d+)", phrase)
         if match and 0 < int(match.group(1)) <= 1440:
             start_timer(int(match.group(1)))
+        else:
+            say("timer_usage")
+    elif phrase in ("stopwatch start", "start stopwatch", "स्टॉपवॉच शुरू", "स्टॉपवॉच स्टार्ट"):
+        global STOPWATCH_START
+        STOPWATCH_START = time.monotonic()
+        say("stopwatch_started")
+    elif phrase in ("stopwatch stop", "stop stopwatch", "स्टॉपवॉच बंद", "स्टॉपवॉच रोकें"):
+        if STOPWATCH_START is None:
+            say("stopwatch_idle")
+        else:
+            elapsed = round(time.monotonic() - STOPWATCH_START, 2)
+            STOPWATCH_START = None
+            say("stopwatch_result", seconds=elapsed)
+    elif phrase.startswith(("random ", "random number ", "रैंडम ")):
+        parts = phrase.split()
+        try:
+            low, high = int(parts[-2]), int(parts[-1])
+            if low > high or high - low > 1000000000:
+                raise ValueError
+            say("random_result", number=random.randint(low, high))
+        except (ValueError, IndexError):
+            say("unknown")
+    elif phrase.startswith(("remind ", "reminder ", "रिमाइंड ")):
+        match = re.match(r"^(?:remind|reminder|रिमाइंड)\s+(\d{1,4})\s+(.+)$", phrase)
+        if match and 0 < int(match.group(1)) <= 1440:
+            minutes, message = int(match.group(1)), match.group(2).strip()
+            start_timer(minutes, message)
+            say("reminder_set", minutes=minutes, message=message)
         else:
             say("timer_usage")
     elif phrase in ("wifi", "wifi status", "वाईफाई", "वाईफाई स्टेटस"):
